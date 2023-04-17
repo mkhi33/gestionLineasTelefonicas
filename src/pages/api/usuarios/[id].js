@@ -2,7 +2,9 @@ import db from '@/database/config';
 import transporter from '@/emails/config';
 import short from 'short-uuid';
 import generarContrasenia from '@/helpers/generarContrasenia';
-export default function handler(req, res) {
+import authMiddlelware from '@/helpers/middleware';
+
+function handler(req, res) {
     const { id, actualizarContrasenia } = req.query;
 
     if (req.method === 'GET') {
@@ -19,6 +21,11 @@ export default function handler(req, res) {
             }
         });
     } else if (req.method === 'PUT') {
+        // Verificar que el usuario sea administrador
+        if (req.user.idRolUsuario !== 1) {
+            res.status(403).json({ error: 'Solo los administradores del sistema puden actualizar usuarios' });
+            return;
+        }
         const { correoElectronico, idRolUsuario, primerNombre, segundoNombre, primerApellido, segundoApellido, idDepartamento } = req.body;
         // Verificar que el departamento existe
         const query = `SELECT * FROM Departamento WHERE idDepartamento = ${idDepartamento}`;
@@ -100,6 +107,11 @@ export default function handler(req, res) {
             }
         });
     } else if (req.method === 'DELETE') {
+        // Verificar que el usuario sea administrador
+        if (req.user.idRolUsuario !== 1) {
+            res.status(403).json({ error: 'Solo los administradores del sistema puden eliminar usuarios' });
+            return;
+        }
         const query = `DELETE FROM Usuario WHERE idUsuario = ${id}`;
         // Verificar si el usuario existe
         db.query(`SELECT * FROM Usuario WHERE idUsuario = ${id}`, (error, results, fields) => {
@@ -124,3 +136,5 @@ export default function handler(req, res) {
 
 
 }
+
+export default authMiddlelware(handler);

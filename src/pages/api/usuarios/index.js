@@ -18,6 +18,11 @@ function handler(req, res) {
             }
         }); 
     } else if( req.method === 'POST'){
+        // Verificar que el usuario sea administrador
+        if(req.user.idRolUsuario !== 1){
+            res.status(403).json({error: 'Solo los administradores del sistema puden crear usuarios'});
+            return;
+        }
         const { correoElectronico, idRolUsuario, primerNombre, segundoNombre, primerApellido, segundoApellido, idDepartamento } = req.body;
         // Verificar que el departamento existe
         const query = `SELECT * FROM Departamento WHERE idDepartamento = ${idDepartamento}`;
