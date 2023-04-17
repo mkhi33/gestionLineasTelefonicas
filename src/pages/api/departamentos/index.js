@@ -1,6 +1,6 @@
 import db from '@/database/config';
-
-export default async function handler(req, res) {
+import authMiddlelware from '@/helpers/middleware';
+function handler(req, res) {
 
     if (req.method === 'GET') {
         db.query('SELECT * FROM Departamento', (error, results, fields) => {
@@ -13,6 +13,9 @@ export default async function handler(req, res) {
         });
     } else if (req.method === 'POST') {
         const { nombreDepartamento, descripcion, limiteLineas } = req.body;
+        if(req.user.idRolUsuario !== 1){
+            return res.status(401).json({message: 'No tiene permisos para crear el departamento'});
+        }
         db.query('INSERT INTO Departamento (nombreDepartamento, descripcion, limiteLineas) VALUES (?, ?, ?)', [nombreDepartamento, descripcion, limiteLineas], (error, results, fields) => {
             if (error) {
                 console.log(error);
@@ -26,3 +29,5 @@ export default async function handler(req, res) {
     }
 
 }
+
+export default authMiddlelware(handler);
