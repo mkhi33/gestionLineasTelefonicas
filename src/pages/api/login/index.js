@@ -25,8 +25,7 @@ export default function handler(req, res) {
                 // Generar un  token para el usuario
                 try {
                     const usuario = results[0]
-                    // Genera el token de acceso con una clave secreta y opciones adicionales
-                    const token = jwt.sign({ userId: usuario.id }, process.env.PALABRA_SECRETA, { expiresIn: '1h' });
+                    const token = jwt.sign({ idUsuario: usuario.idUsuario }, process.env.PALABRA_SECRETA, { expiresIn: '1h',  });
                     return res.status(200).json({
                         token,
                         user: {...usuario, contrasenia: undefined}
