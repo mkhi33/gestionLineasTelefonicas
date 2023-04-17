@@ -1,6 +1,8 @@
 import db from '@/database/config';
+import authMiddlelware from '@/helpers/middleware';
 
-export default function handler(req, res) {
+
+function handler(req, res) {
     const { id, departamentoId } = req.query; 
 
     if(req.method === 'GET'){
@@ -16,8 +18,12 @@ export default function handler(req, res) {
         });
 
     }else if( req.method === 'PUT') {
-
         const {nombreCentroCosto, idDepartamento} = req.body;
+        
+        // Verificar si el usuario es administrador del departamento
+        if(req.user.idDepartamento !== idDepartamento){
+            return res.status(401).json({message: 'No tiene permisos para actualizar el centro de costo'});
+        }
 
         // Actualizar centro de costo solo si el departamento existe
         db.query('SELECT * FROM Departamento WHERE idDepartamento = ?', [idDepartamento], (error, results, fields) => {
@@ -59,16 +65,43 @@ export default function handler(req, res) {
         })
 
     } else if(req.method === 'DELETE') {
-        // Eliminar centro de costo
-        db.query('DELETE FROM CentroCosto WHERE idCentroCosto = ?', [id], (error, results, fields) => {
+        // Verificar si el usuario es administrador del departamento
+
+        // verificar que el centro de costos existe
+        db.query('SELECT * FROM CentroCosto WHERE idCentroCosto = ?', [id], (error, results, fields) => {
             if(error){
-                res.status(500).json({error: 'Error al eliminar el centro de costo'});
+                res.status(500).json({error: 'Error al obtener el centro de costo'});
             }else{
-                res.status(200).json({message: 'Centro de costo eliminado correctamente'});
+                if(results.length === 0){
+                    // El centro de costo no existe
+                    return res.status(404).json({error: 'El centro de costo no existe'});
+                } else {
+                    // El centro de costo existe
+
+                    if(req.user.idDepartamento !== results[0].idDepartamento){
+                        return res.status(401).json({message: 'No tiene permisos para eliminar el centro de costo'});
+                    }
+                    // Eliminar centro de costo
+                    db.query('DELETE FROM CentroCosto WHERE idCentroCosto = ?', [id], (error, results, fields) => {
+                        if(error){
+                            res.status(500).json({error: 'Error al eliminar el centro de costo'});
+                        }else{
+                            res.status(200).json({message: 'Centro de costo eliminado correctamente'});
+                        }
+                    });
+
+                    return;
+                }
+                
             }
         });
+
+
+        
     } else {
         res.status(405).json({error: 'Error, metodo no permitido'});
     }
 
 }
+
+export default authMiddlelware(handler);

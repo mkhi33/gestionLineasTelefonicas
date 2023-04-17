@@ -1,5 +1,6 @@
 import db from '@/database/config';
-export default function handler(req, res) {
+import authMiddlelware from '@/helpers/middleware';
+function handler(req, res) {
 
     if(req.method === 'GET'){
         db.query('SELECT * FROM CentroCosto', (error, results, fields) => {
@@ -12,6 +13,11 @@ export default function handler(req, res) {
     
     } else if(req.method === 'POST'){
         const {nombreCentroCosto, idDepartamento} = req.body;
+
+        // Verificar si el usuario es administrador del departamento
+        if(req.user.idDepartamento !== idDepartamento){
+            return res.status(401).json({message: 'No tiene permisos para crear el centro de costo'});
+        }
 
         // Agregar centro de costo solo si el departamento existe
         db.query('SELECT * FROM Departamento WHERE idDepartamento = ?', [idDepartamento], (error, results, fields) => {
@@ -36,3 +42,5 @@ export default function handler(req, res) {
 
     }
 }
+
+export default authMiddlelware(handler);
