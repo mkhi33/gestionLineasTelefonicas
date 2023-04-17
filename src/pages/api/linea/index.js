@@ -1,6 +1,9 @@
 import db from '@/database/config';
-
-export default function handler(req, res) {
+import authMiddlelware from '@/helpers/middleware';
+function handler(req, res) {
+    if (req.user.idRolUsuario !== 1 || req.user.idRolUsuario !== 2) {
+        return res.status(401).json({message: 'No tiene permisos para realizar esta accion'});
+    }
     
     if( req.method === 'GET') {
         // Obtener todas las lineas telefonicas
@@ -50,3 +53,5 @@ export default function handler(req, res) {
         res.status(405).json({error: 'Metodo no permitido'});
     }
 }
+
+export default authMiddlelware(handler);
