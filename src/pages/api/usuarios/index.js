@@ -1,12 +1,14 @@
 import db from '@/database/config';
 import generarContrasenia from '@/helpers/generarContrasenia';
-import generarContraseñaSHA256 from '@/helpers/generarContrasenia';
 import transporter from '@/emails/config';
 import short from 'short-uuid';
-export default function handler(req, res) {
+import authMiddlelware from '@/helpers/middleware';
+
+function handler(req, res) {
 
     if(req.method === 'GET') {
         // Obtener todos los usuarios
+        console.log("GET")
         const query = `SELECT idUsuario, Usuario.idEmpleado, correoElectronico, idRolUsuario, primerNombre, segundoNombre, primerApellido, idDepartamento FROM Usuario INNER JOIN Empleado ON Usuario.idEmpleado = Empleado.idEmpleado;`
         db.query(query, (error, results, fields) => {
             if(error){
@@ -95,3 +97,5 @@ export default function handler(req, res) {
     }
 
 }
+
+export default authMiddlelware(handler);
