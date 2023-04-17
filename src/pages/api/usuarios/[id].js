@@ -1,5 +1,7 @@
 import db from '@/database/config';
-
+import transporter from '@/emails/config';
+import short from 'short-uuid';
+import generarContrasenia from '@/helpers/generarContrasenia';
 export default function handler(req, res) {
     const { id, actualizarContrasenia } = req.query;
 
@@ -53,11 +55,12 @@ export default function handler(req, res) {
 
 
                                         let queryUsuario = ""
+                                        let contrasenia = ""
+                                        let contraseniaSHA256 = ""
                                         if (actualizarContrasenia == 1) {
-                                            const contrasenia = short.generate();
-                                            console.log(contrasenia);
+                                            contrasenia = short.generate();
                                             // Generar una contraseña sha256
-                                            const contraseniaSHA256 = generarContrasenia(contrasenia);
+                                            contraseniaSHA256 = generarContrasenia(contrasenia);
                                             queryUsuario = `UPDATE Usuario SET correoElectronico = '${correoElectronico}', contrasenia = '${contraseniaSHA256}', idRolUsuario = ${idRolUsuario} WHERE idUsuario = ${id}`;
                                         } else {
                                             queryUsuario = `UPDATE Usuario SET correoElectronico = '${correoElectronico}', idRolUsuario = ${idRolUsuario} WHERE idUsuario = ${id}`;
@@ -67,6 +70,23 @@ export default function handler(req, res) {
                                             if (error) {
                                                 res.status(500).json({ error: 'Error al actualizar el usuario' });
                                             } else {
+                                                if (actualizarContrasenia == 1) {
+                                                    // Enviar el correo electronico
+                                                    const mailOptions = {
+                                                        from: process.env.EMAIL_ADDRESS,
+                                                        to: correoElectronico,
+                                                        subject: 'Actualización de contraseña',
+                                                        html: `<h1>Actualización de contraseña</h1> <p>Se ha actualizado la contraseña de su cuenta, su nueva contraseña es: <b>${contrasenia}</b></p>`
+                                                    };
+                                                    transporter.sendMail(mailOptions, (error, info) => {
+                                                        if (error) {
+                                                            console.log(error);
+                                                        } else {
+                                                            console.log('Email sent: ' + info.response);
+                                                        }
+                                                    });
+                                                }
+
                                                 res.status(200).json({ mensaje: 'Usuario actualizado correctamente' });
                                             }
                                         });
