@@ -63,9 +63,22 @@ export default function handler(req, res) {
                                             }else {
                                                 // Enviar el correo electronico
                                                 const mailOptions = {
-                                                    
+                                                    from: process.env.EMAIL_ADDRESS,
+                                                    to: correoElectronico,
+                                                    subject: 'Registro de usuario',
+                                                    html: ``,
+                                                    text: `Se ha generado su contraseña de usuario para la plataforma de gestión y de lineas telefónicas.\n\nSu contraseña es: ${contrasenia}`
                                                 }
-                                                res.status(200).json({mensaje: 'Usuario registrado correctamente'});
+                                                transporter.sendMail(mailOptions, (error, info) => {
+                                                    if(error){
+    
+                                                        res.status(500).json({error: 'Error al enviar el correo electronico'});
+                                                        
+                                                    }else {
+                                                        res.status(200).json({mensaje: 'Usuario registrado correctamente'});
+                                                        console.log(info);
+                                                    }
+                                                });
                                             }
                                         });
                                     }
